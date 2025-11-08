@@ -27,7 +27,7 @@ class ViewModel{
         homeStatus = .fetching
         
         do{
-            trendingMoveis = try await dataFetcher.fetchTitles(for: "movie")
+            trendingMoveis = try await dataFetcher.fetchTitles(for: "movie",by:"treding")
             homeStatus = .success
         }catch{
             print(error)

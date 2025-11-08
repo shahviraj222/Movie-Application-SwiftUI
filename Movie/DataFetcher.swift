@@ -12,7 +12,10 @@
 //  NSError is nextstep error in that we have 3 paramtere domain , code, userInfo
 
 //  Decoding stategy    TMDB API (like many REST APIs) uses snake_case naming convention Swift conventionally uses camelCase for property names This strategy bridges the gap automatically
-                                            
+                       
+
+
+
 import Foundation
 
 struct DataFetcher{
@@ -20,21 +23,17 @@ struct DataFetcher{
     let tmdbAPIKey = APIConfig.shared?.tmdbAPIKey
     
     
-    func fetchTitles(for media:String) async throws -> [Title]{
-        guard let baseURL = tmdbBaseURL else{
-            throw NetworkError.missingConfig
-        }
-        guard let apiKey = tmdbAPIKey else{
-            throw NetworkError.missingConfig
-        }
-        guard let fetchTitlesURL = URL(string:baseURL)?
-            .appending(path:"3/trending/\(media)/day")
-            .appending(queryItems: [
-                URLQueryItem(name:"api_key",value: apiKey)
-            ])else{
+    //https://api.themoviedb.org/3/trending/movie/day?api_key=YOUR_API_KEY
+    //https://api.themoviedb.org/3/movie/top_rated?api_key=YOUR_API_KEY
+    //https://api.themoviedb.org/3/movie/upcoming?api_key=YOUR_API_KEY
+    //https://api.themoviedb.org/3/search/movie?api_key=YourKey&query=PulpFiction
+    
+    func fetchTitles(for media:String,by type:String) async throws -> [Title]{
+     
+        let fetchTitlesURL = try buildURL(media: media, type:type)
+        guard let fetchTitlesURL = fetchTitlesURL else{
             throw NetworkError.urlBuildFailed
         }
-        print(fetchTitlesURL)
         
         let(data,urlResponse) = try await URLSession.shared.data(from:fetchTitlesURL)
         
@@ -50,6 +49,34 @@ struct DataFetcher{
         var titles =  try decoder.decode(APIObject.self, from: data).results
         Constants.addPosterPath(to: &titles)                // passing the address
         return titles
+    }
+    
+    private func buildURL(media:String,type:String) throws -> URL? {
+        guard let baseURL = tmdbBaseURL else{
+            throw NetworkError.missingConfig
+        }
+        guard let apiKey = tmdbAPIKey else{
+            throw NetworkError.missingConfig
+        }
+        var path:String
+        
+        if type == "trending"{
+            path = "3/trending/\(media)/day"
+        } else if type == "top_rated"{
+            path = "3/\(media)/top_rated"
+        }else{
+            throw NetworkError.urlBuildFailed
+        }
+        
+        guard let url = URL(string:baseURL)?
+            .appending(path:path)
+            .appending(queryItems: [
+                URLQueryItem(name:"api_key",value: apiKey)
+            ])else{
+            throw NetworkError.urlBuildFailed
+        }
+        
+        return url
     }
     
 }
