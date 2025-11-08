@@ -23,55 +23,68 @@
 
 //  Button first closuer what happen when button tapped second clouser is about styling of button
 
-
+// The .task modifier you've added to the ScrollView is a SwiftUI modifier that automatically executes an asynchronous task when the view appears, and cancels it when the view disappears. It's similar to .onAppear but designed specifically for async work.
 
 import SwiftUI
 
 struct HomeView: View {
     var heroTestTitle = Constants.testTitleURL
+    let viewModel = ViewModel()
     
     var body: some View {
         GeometryReader {geo in
             ScrollView{
-                
-                LazyVStack{
-                    
-                    AsyncImage(url:URL(string:heroTestTitle)){ image in
-                        image
-                            .resizable()
-                            .scaledToFit()
-                            .overlay{
-                                LinearGradient(
-                                    stops: [Gradient.Stop(color:.clear,location:0.8),
-                                            Gradient.Stop(color: .gradient, location: 1)],
-                                    startPoint: .top,
-                                    endPoint: .bottom)
+                switch viewModel.homeStatus {
+                case .notStarted:
+                    EmptyView()
+                case .fetching:
+                    ProgressView()
+                case .success:
+                    LazyVStack{
+                        
+                        AsyncImage(url:URL(string:heroTestTitle)){ image in
+                            image
+                                .resizable()
+                                .scaledToFit()
+                                .overlay{
+                                    LinearGradient(
+                                        stops: [Gradient.Stop(color:.clear,location:0.8),
+                                                Gradient.Stop(color: .gradient, location: 1)],
+                                        startPoint: .top,
+                                        endPoint: .bottom)
+                                }
+                        }placeholder: {
+                            ProgressView()
+                        }
+                        .frame(width: geo.size.width,height: geo.size.height * 0.85)
+                        
+                        HStack{
+                            Button{
+                                
+                            } label:{
+                                Text(Constants.playString)
+                                    .ghostButton()
                             }
-                    }placeholder: {
-                        ProgressView()
-                    }
-                    .frame(width: geo.size.width,height: geo.size.height * 0.85)
-                    
-                    HStack{
-                        Button{
-                            
-                        } label:{
-                            Text(Constants.playString)
-                                .ghostButton()
+                            Button{
+                                
+                            } label:{
+                                Text(Constants.downloadString)
+                                    .ghostButton()
+                            }
                         }
-                        Button{
-                            
-                        } label:{
-                            Text(Constants.downloadString)
-                                .ghostButton()
-                        }
+                        
+                        HorizontalListView(header: Constants.trendingMovieString, titles: viewModel.trendingMoveis)
+    //                    HorizontalListView(header: Constants.trendingTVString,titles: Title.previewTitles)
+    //                    HorizontalListView(header: Constants.trendingMovieString,titles: Title.previewTitles)
+    //                    HorizontalListView(header: Constants.trendingTVString,titles: Title.previewTitles)
                     }
-                    
-                    HorizontalListView(header: Constants.trendingMovieString)
-                    HorizontalListView(header: Constants.trendingTVString)
-                    HorizontalListView(header: Constants.trendingMovieString)
-                    HorizontalListView(header: Constants.trendingTVString)
+                case .failed(let error):
+                    Text("Error:\(error)")
                 }
+                
+            }
+            .task {
+                await viewModel.getTitles()
             }
         }
     }
