@@ -5,7 +5,13 @@
 //  Created by viraj shah on 04/11/25.
 //
 
-//comand + option + left arrow  == fold the code
+//  comand + option + left arrow  == fold the code
+
+//  Networking = how to make api call + data models
+
+//  Navigation
+
+
 
 import Foundation
 
